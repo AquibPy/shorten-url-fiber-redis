@@ -15,8 +15,6 @@ The motivation behind this project stems from the need for a lightweight, effici
 - **Analytics Tracking**: Monitor click-through rates, geographical distribution of clicks, and other analytics data for marketing purposes.
 - **Internal Link Management**: Streamline internal processes by shortening and organizing links to company resources, documents, or tools.
 
-
-
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -25,6 +23,7 @@ The motivation behind this project stems from the need for a lightweight, effici
 - [Installation](#installation)
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
+- [Swagger Documentation](#swagger-documentation)
 - [Project Structure](#project-structure)
 - [Environment Variables](#environment-variables)
 - [Docker](#docker)
@@ -41,6 +40,7 @@ This is a URL shortener service built with the Go Fiber framework and Redis. It 
 - Enforce HTTP scheme on URLs
 - Basic rate limiting to prevent abuse
 - Dockerized for easy deployment
+- Swagger documentation for easy API exploration
 
 ## Prerequisites
 
@@ -100,6 +100,74 @@ After running the Docker containers, the API will be available at `http://localh
     - Redirects to the original URL.
     - Returns 404 if the shortened URL is not found.
 
+## Swagger Documentation
+
+Swagger documentation is available to explore the API interactively.
+
+### Setup
+
+1. Install the `swag` tool for generating Swagger docs:
+    ```bash
+    go install github.com/swaggo/swag/cmd/swag@latest
+    ```
+
+2. Generate the Swagger documentation:
+    ```bash
+    swag init
+    ```
+
+3. Access the Swagger UI at `http://localhost:3000/swagger/index.html`.
+
+### Example
+
+Here is how to integrate Swagger in your `main.go`:
+
+```go
+package main
+
+import (
+    "log"
+    "os"
+
+    "github.com/AquibPy/shorten-url-fiber-redis/routes"
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2/middleware/cors"
+    "github.com/gofiber/fiber/v2/middleware/logger"
+    "github.com/joho/godotenv"
+    _ "github.com/AquibPy/shorten-url-fiber-redis/docs" // import generated docs
+    "github.com/gofiber/swagger"                        // swagger handler
+)
+
+// @title Fiber URL Shortener API
+// @version 1.0
+// @description This is a sample URL shortener server.
+// @host localhost:3000
+// @BasePath /
+func setupRoutes(app *fiber.App) {
+    app.Get("/:url", routes.ResolveURL)
+    app.Post("/api/v1", routes.ShortenURL)
+    app.Get("/swagger/*", swagger.HandlerDefault) // default
+}
+
+func main() {
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatal("Error loading .env file")
+    }
+    app := fiber.New()
+
+    // Add CORS middleware
+    app.Use(cors.New(cors.Config{
+        AllowOrigins: "*", // Allow all origins
+        AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+    }))
+
+    app.Use(logger.New())
+    setupRoutes(app)
+    log.Fatal(app.Listen(os.Getenv("APP_PORT")))
+}
+```
+
 ## Project Structure
 
 ```
@@ -114,7 +182,9 @@ After running the Docker containers, the API will be available at `http://localh
 │   │   ├── resolve.go
 │   │   └── shorten.go
 │   ├── main.go
-│   └── .env
+│   ├── .env
+│   └── docs
+│       └── swagger.json
 ├── db
 │   └── Dockerfile
 ├── docker-compose.yml

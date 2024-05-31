@@ -1,0 +1,93 @@
+basePath: /
+definitions:
+  routes.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  routes.ShortenURLRequest:
+    properties:
+      expiry:
+        type: integer
+      short:
+        type: string
+      url:
+        type: string
+    type: object
+  routes.ShortenURLResponse:
+    properties:
+      expiry:
+        type: integer
+      rate_limit:
+        type: integer
+      rate_limit_reset:
+        type: integer
+      short:
+        type: string
+      url:
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: This is a URL shortener API server.
+  title: URL Shortener API
+  version: "1.0"
+paths:
+  /{url}:
+    get:
+      description: Redirects to the original URL corresponding to the given short
+        URL.
+      parameters:
+      - description: Short URL
+        in: path
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "301":
+          description: Moved Permanently
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Resolves a shortened URL
+      tags:
+      - URL
+  /api/v1:
+    post:
+      consumes:
+      - application/json
+      description: Creates a shortened version of a given URL.
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/routes.ShortenURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.ShortenURLResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/routes.ErrorResponse'
+      summary: Shortens a URL
+      tags:
+      - URL
+swagger: "2.0"
